@@ -3,11 +3,6 @@ mamercad.icinga2-client
 
 Stands up an Icinga2 client on RHEL/CentOS
 
-Warnings
---------
-
-The role puts SELinux into permissive mode and disabled firewalld
-
 Requirements
 ------------
 
