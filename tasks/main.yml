@@ -42,6 +42,7 @@
   command: icinga2 pki ticket --cn {{ ansible_fqdn }}
   register: client_ticket
   delegate_to: "{{ icinga2_server }}"
+  become: yes
   when: node_setup.rc != 0
 
 - name: Continue with the additional node setup steps.
