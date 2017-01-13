@@ -17,6 +17,13 @@
 - name: create /etc/icinga2/pki directory
   file: path=/etc/icinga2/pki state=directory owner=icinga group=icinga
 
+# [root@red etc]# mkdir -p /etc/icinga2/features-available
+# [root@red etc]# mkdir -p /etc/icinga2/features-enabled
+# conf.d
+# repository.d
+# get /etc/icinga2/icinga2.conf
+# fix permissions
+
 - name: Generate a new local self-signed certificate.
   command: >
     icinga2 pki new-cert --cn {{ ansible_fqdn }}
@@ -54,3 +61,9 @@
     --trustedcert /etc/icinga2/pki/trusted-master.crt
   when: node_setup.rc != 0
   notify: restart icinga2
+
+- name: Start and enable client
+  service:
+    name: icinga2
+    state: started
+    enabled: true
