@@ -4,3 +4,4 @@
   service:
     name: icinga2
     state: restarted
+  become: yes
