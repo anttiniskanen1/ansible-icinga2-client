@@ -1,9 +1,11 @@
 ---
-- name: deploy ICINGA-release.repo
-  copy: src=ICINGA-release.repo dest=/etc/yum.repos.d/ICINGA-release.repo
-
-- name: import ICINGA GPG KEY
-  rpm_key: key=http://packages.icinga.org/icinga.key state=present
+- name: Add ICINGA Repo
+  yum_repository:
+    name: icinga-stable-release
+    description: "ICINGA (stable release for epel)"
+    baseurl: https://packages.icinga.com/epel/$releasever/release/
+    gpgkey: https://packages.icinga.org/icinga.key
+    gpgcheck: yes
 
 - name: install icinga2 packages
   yum:
@@ -29,7 +31,8 @@
     icinga2 pki new-cert --cn {{ ansible_fqdn }}
     --key /etc/icinga2/pki/{{ ansible_fqdn }}.key
     --cert /etc/icinga2/pki/{{ ansible_fqdn }}.crt
-    creates=/etc/icinga2/pki/{{ ansible_fqdn }}.key
+  args:
+    creates: "/etc/icinga2/pki/{{ ansible_fqdn }}.key"
 
 - name: Request the master certificate from the master host and store it as trusted-master.crt.
   command: >
@@ -37,10 +40,11 @@
     --cert /etc/icinga2/pki/{{ ansible_fqdn }}.crt
     --trustedcert /etc/icinga2/pki/trusted-master.crt
     --host {{ icinga2_server }}
-    creates=/etc/icinga2/pki/trusted-master.crt
+  args:
+    creates: /etc/icinga2/pki/trusted-master.crt
 
 - name: check if node setup needs happen
-  command: grep {{ ansible_fqdn }} /etc/icinga2/constants.conf
+  command: grep "^const NodeName = \"{{ ansible_fqdn }}\"$" /etc/icinga2/constants.conf
   register: node_setup
   changed_when: false
   failed_when: false
@@ -61,6 +65,27 @@
     --trustedcert /etc/icinga2/pki/trusted-master.crt
   when: node_setup.rc != 0
   notify: restart icinga2
+
+- name: Configure zones
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/icinga2/{{ item }}"
+    backup: yes
+    owner: icinga
+    group: icinga
+    mode: 0644
+  notify: restart icinga2
+  with_items:
+    - zones.conf
+
+- name: Enable API features
+  lineinfile:
+    dest: /etc/icinga2/features-available/api.conf
+    regexp: "^  {{ item }}"
+    line: "  {{ item }} = true"
+  notify: restart icinga2
+  with_items:
+    - accept_commands
 
 - name: Start and enable client
   service:

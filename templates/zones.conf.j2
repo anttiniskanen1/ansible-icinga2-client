@@ -1,18 +1,15 @@
 object Endpoint "{{ icinga2_parent }}" {
-  host = "{{ icinga2_parent_ip }}"
-  port = "{{ icinga2_port | default ('5665') }}"
 }
 
 object Zone "master" {
   endpoints = [ "{{ icinga2_parent }}" ]
 }
 
-object Endpoint "{{ ansible_fqdn }}" {
-  host = "{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}"
+object Endpoint NodeName {
 }
 
-object Zone "{{ ansible_fqdn }}" {
-  endpoints = [ "{{ ansible_fqdn }}" ]
+object Zone NodeName {
+  endpoints = [ NodeName ]
   parent = "master"
 }
 
