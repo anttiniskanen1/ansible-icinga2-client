@@ -39,7 +39,7 @@
     icinga2 pki save-cert --key /etc/icinga2/pki/{{ ansible_fqdn }}.key
     --cert /etc/icinga2/pki/{{ ansible_fqdn }}.crt
     --trustedcert /etc/icinga2/pki/trusted-master.crt
-    --host {{ icinga2_server }}
+    --host {{ icinga2_parent }}
   args:
     creates: /etc/icinga2/pki/trusted-master.crt
 
@@ -52,16 +52,16 @@
 - name: Get the client ticket from the server
   command: icinga2 pki ticket --cn {{ ansible_fqdn }}
   register: client_ticket
-  delegate_to: "{{ icinga2_server }}"
+  delegate_to: "{{ icinga2_parent }}"
   become: yes
   when: node_setup.rc != 0
 
 - name: Continue with the additional node setup steps.
   shell: >
     icinga2 node setup --ticket {{ client_ticket.stdout }}
-    --endpoint {{ icinga2_server }}
+    --endpoint {{ icinga2_parent }}
     --zone {{ ansible_fqdn }}
-    --master_host {{ icinga2_server }}
+    --master_host {{ icinga2_parent }}
     --trustedcert /etc/icinga2/pki/trusted-master.crt
   when: node_setup.rc != 0
   notify: restart icinga2
