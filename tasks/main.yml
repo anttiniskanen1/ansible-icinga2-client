@@ -52,7 +52,7 @@
 - name: Get the client ticket from the server
   command: icinga2 pki ticket --cn {{ ansible_fqdn }}
   register: client_ticket
-  delegate_to: "{{ icinga2_parent }}"
+  delegate_to: "{{ icinga2_master }}"
   become: yes
   when: node_setup.rc != 0
 
@@ -61,7 +61,7 @@
     icinga2 node setup --ticket {{ client_ticket.stdout }}
     --endpoint {{ icinga2_parent }}
     --zone {{ ansible_fqdn }}
-    --master_host {{ icinga2_parent }}
+    --master_host {{ icinga2_master }}
     --trustedcert /etc/icinga2/pki/trusted-master.crt
   when: node_setup.rc != 0
   notify: restart icinga2
