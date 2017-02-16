@@ -1,0 +1,18 @@
+---
+- name: Add ICINGA Repo
+  yum_repository:
+    name: icinga-stable-release
+    description: "ICINGA (stable release for epel)"
+    baseurl: https://packages.icinga.com/epel/$releasever/release/
+    gpgkey: https://packages.icinga.org/icinga.key
+    gpgcheck: yes
+
+- name: install icinga2 packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - icinga2-bin
+    - icinga2-selinux
+    - nagios-plugins-all
+

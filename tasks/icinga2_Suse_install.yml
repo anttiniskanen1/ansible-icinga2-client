@@ -1,0 +1,34 @@
+- name: Add Leap 42.1 OSS repository
+  zypper_repository:
+    repo: http://download.opensuse.org/distribution/leap/42.1/repo/oss
+    state: present
+    name: Leap 42.1 OSS
+    description: "Leap 42.1 OSS"
+    runrefresh: yes
+    auto_import_keys: yes
+  when: ansible_distribution_version == '12.1'
+
+- name: Check if server:monitoring repo already configured
+  stat:
+    path: /etc/zypp/repos.d/server_monitoring.repo
+  register: server_monitoring_repo
+
+- name: Add SLE_12_SP1 server:monitoring repository
+  zypper_repository:
+    repo: http://download.opensuse.org/repositories/server:monitoring/SLE_12_SP1/server:monitoring.repo
+    state: present
+    runrefresh: yes
+    auto_import_keys: yes
+  when:
+    - ansible_distribution_version == '12.1'
+    - server_monitoring_repo.stat.exists == False 
+
+- name: Install Icinga2 packages
+  zypper:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+    disable_gpg_check: yes
+  with_items:
+    - icinga2
+
